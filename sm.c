@@ -12,7 +12,7 @@
   | obtain it through the world-wide-web, please send a note to          |
   | license@php.net so we can mail you a copy immediately.               |
   +----------------------------------------------------------------------+
-  | Author:                                                              |
+  | Author: Ilya Sabelnikov <fruit.dev@gmail.com                         |
   +----------------------------------------------------------------------+
 */
 
@@ -206,7 +206,6 @@ sm_letter_pairs (char *str, zval *return_value) /* {{{ */
 
   if (0 == pairs_size)
   {
-    //php_printf("Skipping due to lenght of pair: %s\n", str);
     return;
   }
 
