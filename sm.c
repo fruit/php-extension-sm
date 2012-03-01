@@ -22,19 +22,11 @@
 #include "config.h"
 #endif
 
-
 #include "php.h"
-#include "ext/mbstring/mbstring.h"
 #include "php_sm.h"
 
 #if HAVE_MBSTRING
-
-/* If you declare any globals in php_sm.h uncomment this:
-ZEND_DECLARE_MODULE_GLOBALS(sm)
-*/
-
-/* True global resources - no need for thread safety here */
-//static int le_sm;
+#include "ext/mbstring/mbstring.h"
 
 /* {{{ sm_functions[]
  *
@@ -42,7 +34,7 @@ ZEND_DECLARE_MODULE_GLOBALS(sm)
  */
 const zend_function_entry sm_functions[] = {
   PHP_FE(strike_match, NULL)
-  {NULL, NULL, NULL}  /* Must be the last line in sm_functions[] */
+  {NULL, NULL, NULL}
 };
 /* }}} */
 
@@ -54,13 +46,13 @@ zend_module_entry sm_module_entry = {
 #endif
   "sm",
   sm_functions,
-  PHP_MINIT(sm),
-  PHP_MSHUTDOWN(sm),
-  PHP_RINIT(sm),    /* Replace with NULL if there's nothing to do at request start */
-  PHP_RSHUTDOWN(sm),  /* Replace with NULL if there's nothing to do at request end */
+  NULL,
+  NULL,
+  NULL,
+  NULL,
   PHP_MINFO(sm),
 #if ZEND_MODULE_API_NO >= 20010901
-  "1.0", /* Replace with version number for your extension */
+  "1.0",
 #endif
   STANDARD_MODULE_PROPERTIES
 };
@@ -70,67 +62,6 @@ zend_module_entry sm_module_entry = {
 ZEND_GET_MODULE(sm)
 #endif
 
-/* {{{ PHP_INI
- */
-/* Remove comments and fill if you need to have entries in php.ini
-PHP_INI_BEGIN()
-    STD_PHP_INI_ENTRY("sm.global_value",      "42", PHP_INI_ALL, OnUpdateLong, global_value, zend_sm_globals, sm_globals)
-    STD_PHP_INI_ENTRY("sm.global_string", "foobar", PHP_INI_ALL, OnUpdateString, global_string, zend_sm_globals, sm_globals)
-PHP_INI_END()
-*/
-/* }}} */
-
-/* {{{ php_sm_init_globals
- */
-/* Uncomment this function if you have INI entries
-static void php_sm_init_globals(zend_sm_globals *sm_globals)
-{
-  sm_globals->global_value = 0;
-  sm_globals->global_string = NULL;
-}
-*/
-/* }}} */
-
-/* {{{ PHP_MINIT_FUNCTION
- */
-PHP_MINIT_FUNCTION(sm)
-{
-  /* If you have INI entries, uncomment these lines
-  REGISTER_INI_ENTRIES();
-  */
-  return SUCCESS;
-}
-/* }}} */
-
-/* {{{ PHP_MSHUTDOWN_FUNCTION
- */
-PHP_MSHUTDOWN_FUNCTION(sm)
-{
-  /* uncomment this line if you have INI entries
-  UNREGISTER_INI_ENTRIES();
-  */
-  return SUCCESS;
-}
-/* }}} */
-
-/* Remove if there's nothing to do at request start */
-/* {{{ PHP_RINIT_FUNCTION
- */
-PHP_RINIT_FUNCTION(sm)
-{
-  return SUCCESS;
-}
-/* }}} */
-
-/* Remove if there's nothing to do at request end */
-/* {{{ PHP_RSHUTDOWN_FUNCTION
- */
-PHP_RSHUTDOWN_FUNCTION(sm)
-{
-  return SUCCESS;
-}
-/* }}} */
-
 /* {{{ PHP_MINFO_FUNCTION
  */
 PHP_MINFO_FUNCTION(sm)
@@ -138,53 +69,6 @@ PHP_MINFO_FUNCTION(sm)
   php_info_print_table_start();
   php_info_print_table_header(2, "Strike match support", "enabled");
   php_info_print_table_end();
-
-  /* Remove comments if you have entries in php.ini
-  DISPLAY_INI_ENTRIES();
-  */
-}
-/* }}} */
-
-void
-sm_word_letter_pairs_exp(mbfl_string str, zval *return_value) /* {{{ */
-{
-  char  *delim = " ";
-  int   delim_len = sizeof(" ") - 1;
-  zval  zdelim, zstr;
-
-  zval  *pairs_in_word = NULL;
-  zval  **data;
-  char  *word = NULL;
-  uint  word_len = 0;
-
-  ushort        number_of_pairs_in_word = 0;
-  HashTable     *pairs_in_word_hash;
-  HashPosition  pointer;
-
-  MAKE_STD_ZVAL(pairs_in_word);
-  array_init(pairs_in_word);
-
-  ZVAL_STRINGL(&zstr, str.val, str.len, 0);
-  ZVAL_STRINGL(&zdelim, delim, delim_len, 0);
-  php_explode(&zdelim, &zstr, pairs_in_word, LONG_MAX);
-
-  pairs_in_word_hash = Z_ARRVAL_P(pairs_in_word);
-  number_of_pairs_in_word = zend_hash_num_elements(pairs_in_word_hash);
-
-  for(zend_hash_internal_pointer_reset_ex(pairs_in_word_hash, &pointer);
-      zend_hash_get_current_data_ex(pairs_in_word_hash, (void**) &data, &pointer) == SUCCESS;
-      zend_hash_move_forward_ex(pairs_in_word_hash, &pointer))
-  {
-    word_len = Z_STRLEN_PP(data);
-
-    if (0 < word_len)
-    {
-      word = Z_STRVAL_PP(data);
-      sm_letter_pairs(word, return_value);
-    }
-  }
-
-  zval_ptr_dtor(&pairs_in_word);
 }
 /* }}} */
 
@@ -204,6 +88,8 @@ sm_letter_pairs (char *str, zval *return_value) /* {{{ */
 
   pairs_size = mbfl_strlen(&mb_word) - 1;
 
+  
+  
   if (0 == pairs_size)
   {
     return;
@@ -218,6 +104,51 @@ sm_letter_pairs (char *str, zval *return_value) /* {{{ */
   }
 }
 /* }}} */
+
+void
+sm_word_letter_pairs_exp(mbfl_string str, zval *return_value) /* {{{ */
+{
+  char  *delim = " ";
+  int   delim_len = sizeof(" ") - 1;
+  zval  zdelim, zstr;
+
+  zval  *pairs_in_word = NULL;
+  zval  **data;
+  char  *word = NULL;
+  uint  word_len = 0;
+
+  ushort        number_of_pairs_in_word = 0;
+  HashTable     *pairs_in_word_hash;
+  HashPosition  pos;
+
+  MAKE_STD_ZVAL(pairs_in_word);
+  array_init(pairs_in_word);
+
+  ZVAL_STRINGL(&zstr, str.val, str.len, 0);
+  ZVAL_STRINGL(&zdelim, delim, delim_len, 0);
+  php_explode(&zdelim, &zstr, pairs_in_word, LONG_MAX);
+
+  pairs_in_word_hash = Z_ARRVAL_P(pairs_in_word);
+  number_of_pairs_in_word = zend_hash_num_elements(pairs_in_word_hash);
+
+  for(zend_hash_internal_pointer_reset_ex(pairs_in_word_hash, &pos);
+      zend_hash_get_current_data_ex(pairs_in_word_hash, (void**) &data, &pos) == SUCCESS;
+      zend_hash_move_forward_ex(pairs_in_word_hash, &pos))
+  {
+    word_len = Z_STRLEN_PP(data);
+
+    if (0 < word_len)
+    {
+      word = Z_STRVAL_PP(data);
+      sm_letter_pairs(word, return_value);
+    }
+  }
+
+  zval_ptr_dtor(&pairs_in_word);
+}
+/* }}} */
+
+
 
 /* {{{ proto double strike_match(string str_a, string str_b)
    Calculates match between two strings. */
