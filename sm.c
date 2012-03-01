@@ -12,7 +12,7 @@
   | obtain it through the world-wide-web, please send a note to          |
   | license@php.net so we can mail you a copy immediately.               |
   +----------------------------------------------------------------------+
-  | Author: Ilya Sabelnikov <fruit.dev@gmail.com                         |
+  | Author: Ilya Sabelnikov <fruit.dev@gmail.com>                        |
   +----------------------------------------------------------------------+
 */
 
@@ -24,8 +24,6 @@
 
 #include "php.h"
 #include "php_sm.h"
-
-#if HAVE_MBSTRING
 #include "ext/mbstring/mbstring.h"
 
 /* {{{ sm_functions[]
@@ -72,8 +70,7 @@ PHP_MINFO_FUNCTION(sm)
 }
 /* }}} */
 
-void
-sm_letter_pairs (char *str, zval *return_value) /* {{{ */
+void sm_letter_pairs (char *str, zval *return_value) /* {{{ */
 {
   mbfl_string mb_word, result, *ret = NULL;
   uint pairs_size, i;
@@ -87,8 +84,6 @@ sm_letter_pairs (char *str, zval *return_value) /* {{{ */
   mb_word.len = strlen(str);
 
   pairs_size = mbfl_strlen(&mb_word) - 1;
-
-  
   
   if (0 == pairs_size)
   {
@@ -105,8 +100,7 @@ sm_letter_pairs (char *str, zval *return_value) /* {{{ */
 }
 /* }}} */
 
-void
-sm_word_letter_pairs_exp(mbfl_string str, zval *return_value) /* {{{ */
+void sm_word_letter_pairs_exp (mbfl_string str, zval *return_value) /* {{{ */
 {
   char  *delim = " ";
   int   delim_len = sizeof(" ") - 1;
@@ -117,7 +111,7 @@ sm_word_letter_pairs_exp(mbfl_string str, zval *return_value) /* {{{ */
   char  *word = NULL;
   uint  word_len = 0;
 
-  ushort        number_of_pairs_in_word = 0;
+  uint          number_of_pairs_in_word = 0;
   HashTable     *pairs_in_word_hash;
   HashPosition  pos;
 
@@ -148,46 +142,41 @@ sm_word_letter_pairs_exp(mbfl_string str, zval *return_value) /* {{{ */
 }
 /* }}} */
 
-
-
-/* {{{ proto double strike_match(string str_a, string str_b)
-   Calculates match between two strings. */
-PHP_FUNCTION(strike_match)
+double php_strike_match (const char *str_a_val, int str_a_len, const char *str_b_val, int str_b_len) /* {{{ */
 {
-  zval          **data_a, **data_b;
-  zval          *word_a_pairs, *word_b_pairs;
+  zval **data_a;
+  zval **data_b;
+  
+  zval *word_a_pairs;
+  zval *word_b_pairs;
 
-  HashTable     *arr_a_hash, *arr_b_hash;
+  HashTable     *arr_a_hash;
+  HashTable     *arr_b_hash;
+  
   HashPosition  pointer_a, pointer_b;
 
   mbfl_string   str_a, str_b;
 
-  uint          intersection = 0, union_num = 0;
+  uint intersection = 0;
+  uint union_num    = 0;
 
   char   *key;
   uint   key_len;
   ulong  index;
-
-  mbfl_string_init(&str_a);
-  mbfl_string_init(&str_b);
-
-  str_a.no_language = mbfl_no_language_uni;
-  str_a.no_encoding = mbfl_no_encoding_utf8;
-
-  str_b.no_language = mbfl_no_language_uni;
-  str_b.no_encoding = mbfl_no_encoding_utf8;
-
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss",
-                           (char **)&str_a.val, (int *)&str_a.len,
-                           (char **)&str_b.val, (int *)&str_b.len
-    ) == FAILURE) {
-    RETURN_NULL();
-  }
-
+  
+  mbfl_string_init_set(&str_a, mbfl_no_language_uni, mbfl_no_encoding_utf8);
+  mbfl_string_init_set(&str_b, mbfl_no_language_uni, mbfl_no_encoding_utf8);
+  
+  str_a.val = str_a_val;
+  str_a.len = str_a_len;
+  
+  str_b.val = str_b_val;
+  str_b.len = str_b_len;
+  
   /* empty lines are equal and equal strings are matching at 100% */
   if (0 == str_a.len + str_b.len || 0 == strcmp(str_a.val, str_b.val))
   {
-    RETURN_DOUBLE(1.0);
+    return 1.0;
   }
 
   MAKE_STD_ZVAL(word_a_pairs);
@@ -207,7 +196,7 @@ PHP_FUNCTION(strike_match)
   /* no pairs at all, does not matches at all */
   if (0 == union_num)
   {
-    RETURN_DOUBLE(0.0);
+    return 0.0;
   }
 
   for(zend_hash_internal_pointer_reset_ex(arr_a_hash, &pointer_a);
@@ -236,20 +225,35 @@ PHP_FUNCTION(strike_match)
   /* free useless variables */
   zval_ptr_dtor(&word_a_pairs);
   zval_ptr_dtor(&word_b_pairs);
+  
+  return (2.0 * intersection) / union_num;  
+}
+/* }}} */
 
-  RETURN_DOUBLE((2.0 * intersection) / union_num);
+/* {{{ proto double strike_match(string str_a, string str_b)
+   Calculates match between two strings. */
+PHP_FUNCTION(strike_match)
+{
+  char *str_a_val;
+  char *str_b_val;
+  
+  int str_a_len;
+  int str_b_len;
+  
+  double result = 0.0;
+
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss",
+                           &str_a_val, &str_a_len,
+                           &str_b_val, &str_b_len
+    ) == FAILURE) {
+    return;
+  }
+  
+  result = php_strike_match(str_a_val, str_a_len, str_b_val, str_b_len);
+
+  RETURN_DOUBLE(result);
 }
 /* }}}*/
-
-#endif  /* HAVE_MBSTRING */
-
-
-/* The previous line is meant for vim and emacs, so it can correctly fold and
-   unfold functions in source code. See the corresponding marks just before
-   function definition, where the functions purpose is also documented. Please
-   follow this convention for the convenience of others editing your code.
-*/
-
 
 /*
  * Local variables:
