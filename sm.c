@@ -24,7 +24,11 @@
 
 #include "php.h"
 #include "php_sm.h"
+
+#if HAVE_MBSTRING
 #include "ext/mbstring/mbstring.h"
+ZEND_EXTERN_MODULE_GLOBALS(mbstring)
+#endif
 
 /* {{{ sm_functions[]
  *
@@ -167,10 +171,10 @@ double php_strike_match (const char *str_a_val, int str_a_len, const char *str_b
   mbfl_string_init_set(&str_a, mbfl_no_language_uni, mbfl_no_encoding_utf8);
   mbfl_string_init_set(&str_b, mbfl_no_language_uni, mbfl_no_encoding_utf8);
   
-  str_a.val = str_a_val;
+  str_a.val = (unsigned char *) str_a_val;
   str_a.len = str_a_len;
   
-  str_b.val = str_b_val;
+  str_b.val = (unsigned char *) str_b_val;
   str_b.len = str_b_len;
   
   /* empty lines are equal and equal strings are matching at 100% */
