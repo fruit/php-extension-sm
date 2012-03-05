@@ -32,12 +32,13 @@ extern zend_module_entry sm_module_entry;
 #  define PHP_SM_API
 #endif
 
+PHP_SM_API extern double sm_strike_match (const char *str_a_val, int str_a_len, const char *str_b_val, int str_b_len);
+
 #ifdef ZTS
 #include "TSRM.h"
 #endif
 
 PHP_MINFO_FUNCTION(sm);
-
 PHP_FUNCTION(strike_match);
 
 #ifdef ZTS

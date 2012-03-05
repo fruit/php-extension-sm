@@ -88,7 +88,7 @@ void sm_letter_pairs (char *str, zval *return_value) /* {{{ */
   mb_word.len = strlen(str);
 
   pairs_size = mbfl_strlen(&mb_word) - 1;
-  
+
   if (0 == pairs_size)
   {
     return;
@@ -146,17 +146,17 @@ void sm_word_letter_pairs_exp (mbfl_string str, zval *return_value) /* {{{ */
 }
 /* }}} */
 
-double php_strike_match (const char *str_a_val, int str_a_len, const char *str_b_val, int str_b_len) /* {{{ */
+double sm_strike_match (const char *str_a_val, int str_a_len, const char *str_b_val, int str_b_len) /* {{{ */
 {
   zval **data_a;
   zval **data_b;
-  
+
   zval *word_a_pairs;
   zval *word_b_pairs;
 
   HashTable     *arr_a_hash;
   HashTable     *arr_b_hash;
-  
+
   HashPosition  pointer_a, pointer_b;
 
   mbfl_string   str_a, str_b;
@@ -167,16 +167,16 @@ double php_strike_match (const char *str_a_val, int str_a_len, const char *str_b
   char   *key;
   uint   key_len;
   ulong  index;
-  
+
   mbfl_string_init_set(&str_a, mbfl_no_language_uni, mbfl_no_encoding_utf8);
   mbfl_string_init_set(&str_b, mbfl_no_language_uni, mbfl_no_encoding_utf8);
-  
+
   str_a.val = (unsigned char *) str_a_val;
   str_a.len = str_a_len;
-  
+
   str_b.val = (unsigned char *) str_b_val;
   str_b.len = str_b_len;
-  
+
   /* empty lines are equal and equal strings are matching at 100% */
   if (0 == str_a.len + str_b.len || 0 == strcmp(str_a.val, str_b.val))
   {
@@ -200,6 +200,8 @@ double php_strike_match (const char *str_a_val, int str_a_len, const char *str_b
   /* no pairs at all, does not matches at all */
   if (0 == union_num)
   {
+    zval_ptr_dtor(&word_a_pairs);
+    zval_ptr_dtor(&word_b_pairs);
     return 0.0;
   }
 
@@ -229,8 +231,8 @@ double php_strike_match (const char *str_a_val, int str_a_len, const char *str_b
   /* free useless variables */
   zval_ptr_dtor(&word_a_pairs);
   zval_ptr_dtor(&word_b_pairs);
-  
-  return (2.0 * intersection) / union_num;  
+
+  return (2.0 * intersection) / union_num;
 }
 /* }}} */
 
@@ -240,10 +242,10 @@ PHP_FUNCTION(strike_match)
 {
   char *str_a_val;
   char *str_b_val;
-  
+
   int str_a_len;
   int str_b_len;
-  
+
   double result = 0.0;
 
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss",
@@ -252,8 +254,8 @@ PHP_FUNCTION(strike_match)
     ) == FAILURE) {
     return;
   }
-  
-  result = php_strike_match(str_a_val, str_a_len, str_b_val, str_b_len);
+
+  result = sm_strike_match(str_a_val, str_a_len, str_b_val, str_b_len);
 
   RETURN_DOUBLE(result);
 }
