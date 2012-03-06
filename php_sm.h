@@ -24,6 +24,8 @@
 extern zend_module_entry sm_module_entry;
 #define phpext_sm_ptr &sm_module_entry
 
+#define HAVE_SM 1
+
 #ifdef PHP_WIN32
 #  define PHP_SM_API __declspec(dllexport)
 #elif defined(__GNUC__) && __GNUC__ >= 4

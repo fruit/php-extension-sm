@@ -74,7 +74,7 @@ PHP_MINFO_FUNCTION(sm)
 }
 /* }}} */
 
-void sm_letter_pairs (char *str, zval *return_value) /* {{{ */
+static void sm_letter_pairs (char *str, zval *return_value) /* {{{ */
 {
   mbfl_string mb_word, result, *ret = NULL;
   uint pairs_size, i;
@@ -85,7 +85,7 @@ void sm_letter_pairs (char *str, zval *return_value) /* {{{ */
   mb_word.no_encoding = mbfl_no_encoding_utf8;
 
   mb_word.val = (unsigned char *) str;
-  mb_word.len = strlen(str);
+  mb_word.len = sizeof(mb_word.val);
 
   pairs_size = mbfl_strlen(&mb_word) - 1;
 
@@ -104,7 +104,7 @@ void sm_letter_pairs (char *str, zval *return_value) /* {{{ */
 }
 /* }}} */
 
-void sm_word_letter_pairs_exp (mbfl_string str, zval *return_value) /* {{{ */
+static void sm_word_letter_pairs_exp (mbfl_string str, zval *return_value) /* {{{ */
 {
   char  *delim = " ";
   int   delim_len = sizeof(" ") - 1;
@@ -112,11 +112,7 @@ void sm_word_letter_pairs_exp (mbfl_string str, zval *return_value) /* {{{ */
 
   zval  *pairs_in_word = NULL;
   zval  **data;
-  char  *word = NULL;
-  uint  word_len = 0;
 
-  uint          number_of_pairs_in_word = 0;
-  HashTable     *pairs_in_word_hash;
   HashPosition  pos;
 
   MAKE_STD_ZVAL(pairs_in_word);
@@ -126,19 +122,13 @@ void sm_word_letter_pairs_exp (mbfl_string str, zval *return_value) /* {{{ */
   ZVAL_STRINGL(&zdelim, delim, delim_len, 0);
   php_explode(&zdelim, &zstr, pairs_in_word, LONG_MAX);
 
-  pairs_in_word_hash = Z_ARRVAL_P(pairs_in_word);
-  number_of_pairs_in_word = zend_hash_num_elements(pairs_in_word_hash);
-
-  for(zend_hash_internal_pointer_reset_ex(pairs_in_word_hash, &pos);
-      zend_hash_get_current_data_ex(pairs_in_word_hash, (void**) &data, &pos) == SUCCESS;
-      zend_hash_move_forward_ex(pairs_in_word_hash, &pos))
+  for(zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(pairs_in_word), &pos);
+      zend_hash_get_current_data_ex(Z_ARRVAL_P(pairs_in_word), (void**) &data, &pos) == SUCCESS;
+      zend_hash_move_forward_ex(Z_ARRVAL_P(pairs_in_word), &pos))
   {
-    word_len = Z_STRLEN_PP(data);
-
-    if (0 < word_len)
+    if (0 < Z_STRLEN_PP(data))
     {
-      word = Z_STRVAL_PP(data);
-      sm_letter_pairs(word, return_value);
+      sm_letter_pairs(Z_STRVAL_PP(data), return_value);
     }
   }
 
@@ -178,9 +168,15 @@ double sm_strike_match (const char *str_a_val, int str_a_len, const char *str_b_
   str_b.len = str_b_len;
 
   /* empty lines are equal and equal strings are matching at 100% */
-  if (0 == str_a.len + str_b.len || 0 == strcmp(str_a.val, str_b.val))
+  if (0 == (str_a.len + str_b.len) || 0 == strcmp(str_a.val, str_b.val))
   {
     return 1.0;
+  }
+
+  /* if one of strings is empty - strings is completely different */
+  if (0 == str_a.len || 0 == str_b.len)
+  {
+    return 0.0;
   }
 
   MAKE_STD_ZVAL(word_a_pairs);
@@ -202,6 +198,7 @@ double sm_strike_match (const char *str_a_val, int str_a_len, const char *str_b_
   {
     zval_ptr_dtor(&word_a_pairs);
     zval_ptr_dtor(&word_b_pairs);
+
     return 0.0;
   }
 
@@ -246,8 +243,6 @@ PHP_FUNCTION(strike_match)
   int str_a_len;
   int str_b_len;
 
-  double result = 0.0;
-
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss",
                            &str_a_val, &str_a_len,
                            &str_b_val, &str_b_len
@@ -255,9 +250,7 @@ PHP_FUNCTION(strike_match)
     return;
   }
 
-  result = sm_strike_match(str_a_val, str_a_len, str_b_val, str_b_len);
-
-  RETURN_DOUBLE(result);
+  RETURN_DOUBLE(sm_strike_match(str_a_val, str_a_len, str_b_val, str_b_len));
 }
 /* }}}*/
 
