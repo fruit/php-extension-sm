@@ -98,8 +98,6 @@ static void sm_letter_pairs (const char *str, int len, zval *return_value) /* {{
   {
     ret = mbfl_substr(&mb_word, &result, i, 2);
     add_next_index_stringl(return_value, ret->val, ret->len, 0);
-
-    //mbfl_free(ret->val);
   }
 }
 /* }}} */
