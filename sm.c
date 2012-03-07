@@ -74,7 +74,7 @@ PHP_MINFO_FUNCTION(sm)
 }
 /* }}} */
 
-static void sm_letter_pairs (char *str, zval *return_value) /* {{{ */
+static void sm_letter_pairs (const char *str, int len, zval *return_value) /* {{{ */
 {
   mbfl_string mb_word, result, *ret = NULL;
   uint pairs_size, i;
@@ -85,7 +85,7 @@ static void sm_letter_pairs (char *str, zval *return_value) /* {{{ */
   mb_word.no_encoding = mbfl_no_encoding_utf8;
 
   mb_word.val = (unsigned char *) str;
-  mb_word.len = sizeof(mb_word.val);
+  mb_word.len = len;
 
   pairs_size = mbfl_strlen(&mb_word) - 1;
 
@@ -97,9 +97,9 @@ static void sm_letter_pairs (char *str, zval *return_value) /* {{{ */
   for (i = 0; i < pairs_size; i ++)
   {
     ret = mbfl_substr(&mb_word, &result, i, 2);
-    add_next_index_string(return_value, ret->val, 1);
+    add_next_index_stringl(return_value, ret->val, ret->len, 0);
 
-    mbfl_free(ret->val);
+    //mbfl_free(ret->val);
   }
 }
 /* }}} */
@@ -128,7 +128,7 @@ static void sm_word_letter_pairs_exp (mbfl_string str, zval *return_value) /* {{
   {
     if (0 < Z_STRLEN_PP(data))
     {
-      sm_letter_pairs(Z_STRVAL_PP(data), return_value);
+      sm_letter_pairs(Z_STRVAL_PP(data), Z_STRLEN_PP(data), return_value);
     }
   }
 
