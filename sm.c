@@ -136,7 +136,7 @@ static void sm_word_letter_pairs_exp (mbfl_string str, zval *return_value) /* {{
 }
 /* }}} */
 
-double sm_strike_match (const char *str_a_val, int str_a_len, const char *str_b_val, int str_b_len) /* {{{ */
+PHP_SM_API double sm_strike_match (const char *str_a_val, int str_a_len, const char *str_b_val, int str_b_len) /* {{{ */
 {
   zval **data_a;
   zval **data_b;
