@@ -30,6 +30,8 @@
 ZEND_EXTERN_MODULE_GLOBALS(mbstring)
 #endif
 
+#define SM_MODULE_VERSION PHP_SM_VERSION
+
 /* {{{ sm_functions[]
  *
  * Every user visible function must have an entry in sm_functions[].
@@ -54,7 +56,7 @@ zend_module_entry sm_module_entry = {
   NULL,
   PHP_MINFO(sm),
 #if ZEND_MODULE_API_NO >= 20010901
-  "2.0",
+  SM_MODULE_VERSION,
 #endif
   STANDARD_MODULE_PROPERTIES
 };
@@ -70,7 +72,9 @@ PHP_MINFO_FUNCTION(sm)
 {
   php_info_print_table_start();
   php_info_print_table_header(2, "Strike match support", "enabled");
-  php_info_print_table_header(2, "Version", "2.0");
+  php_info_print_table_header(2, "Version", SM_MODULE_VERSION);
+  php_info_print_table_header(2, "Date", "2012/03/28 13:21:39");
+  php_info_print_table_header(2, "Author", "Ilya Sabelnikov <fruit.dev@gmail.com>");
   php_info_print_table_end();
 }
 /* }}} */
@@ -151,19 +155,16 @@ static void sm_word_letter_pairs_exp (mbfl_string str, zval *return_value, int *
 
 PHP_SM_API double sm_strike_match (const char *str_a_val, int str_a_len, const char *str_b_val, int str_b_len) /* {{{ */
 {
-  zval **data_a;
-  zval **data_b;
-
   zval *word_a_pairs;
   zval *word_b_pairs;
 
   int pairs_a_count = 0;
   int pairs_b_count = 0;
 
-  HashTable     *arr_a_hash;
-  HashTable     *arr_b_hash;
+  HashTable     *ht_pairs_short;
+  HashTable     *ht_pairs_long;
 
-  HashPosition  pointer_a;
+  HashPosition  position;
 
   mbfl_string   str_a, str_b;
 
@@ -215,18 +216,32 @@ PHP_SM_API double sm_strike_match (const char *str_a_val, int str_a_len, const c
     return 0.0;
   }
 
-  arr_a_hash = Z_ARRVAL_P(word_a_pairs);
-
-  for (zend_hash_internal_pointer_reset_ex(arr_a_hash, &pointer_a);
-       SUCCESS == zend_hash_get_current_data_ex(arr_a_hash, (void**) &data_a, &pointer_a);
-       zend_hash_move_forward_ex(arr_a_hash, &pointer_a))
+  if (pairs_a_count < pairs_b_count)
   {
-    zend_hash_get_current_key_ex(arr_a_hash, &key, &key_len, &index, 0, &pointer_a);
+    ht_pairs_short = Z_ARRVAL_P(word_a_pairs);
+    ht_pairs_long  = Z_ARRVAL_P(word_b_pairs);
+  }
+  else
+  {
+    ht_pairs_short = Z_ARRVAL_P(word_b_pairs);
+    ht_pairs_long  = Z_ARRVAL_P(word_a_pairs);
+  }
 
-    zval **data_b;
-    if (SUCCESS == zend_hash_find(Z_ARRVAL_P(word_b_pairs), key, key_len, (void**) &data_b))
+  zval **pp_pairs_short_count;
+
+  for (zend_hash_internal_pointer_reset_ex(ht_pairs_short, &position);
+       SUCCESS == zend_hash_get_current_data_ex(ht_pairs_short, (void**) &pp_pairs_short_count, &position);
+       zend_hash_move_forward_ex(ht_pairs_short, &position))
+  {
+    zend_hash_get_current_key_ex(ht_pairs_short, &key, &key_len, &index, 0, &position);
+
+    zval **pp_pairs_long_count;
+    if (SUCCESS == zend_hash_find(ht_pairs_long, key, key_len, (void**) &pp_pairs_long_count))
     {
-      intersection += Z_LVAL_PP(data_a) < Z_LVAL_PP(data_b) ? Z_LVAL_PP(data_a) : Z_LVAL_PP(data_b);
+      intersection += Z_LVAL_PP(pp_pairs_short_count) < Z_LVAL_PP(pp_pairs_long_count)
+        ? Z_LVAL_PP(pp_pairs_short_count)
+        : Z_LVAL_PP(pp_pairs_long_count)
+      ;
     }
   }
 
