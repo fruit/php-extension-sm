@@ -73,7 +73,7 @@ PHP_MINFO_FUNCTION(sm)
   php_info_print_table_start();
   php_info_print_table_header(2, "Strike match support", "enabled");
   php_info_print_table_header(2, "Version", SM_MODULE_VERSION);
-  php_info_print_table_header(2, "Date", "2012/03/28 13:21:39");
+  php_info_print_table_header(2, "Date", "2012/04/03 00:48:51");
   php_info_print_table_header(2, "Author", "Ilya Sabelnikov <fruit.dev@gmail.com>");
   php_info_print_table_end();
 }
@@ -82,7 +82,8 @@ PHP_MINFO_FUNCTION(sm)
 static void sm_letter_pairs (const char *str, int len, zval *return_value, int *pairs_count) /* {{{ */
 {
   mbfl_string mb_word, mb_result, *ret = NULL;
-  int pairs_size, i;
+  zval **tmp;
+  int i;
 
   mbfl_string_init(&mb_word);
 
@@ -92,7 +93,7 @@ static void sm_letter_pairs (const char *str, int len, zval *return_value, int *
   mb_word.val = (unsigned char *) str;
   mb_word.len = len;
 
-  pairs_size = mbfl_strlen(&mb_word) - 1;
+  int pairs_size = mbfl_strlen(&mb_word) - 1;
 
   if (0 == pairs_size)
   {
@@ -105,11 +106,9 @@ static void sm_letter_pairs (const char *str, int len, zval *return_value, int *
   {
     ret = mbfl_substr(&mb_word, &mb_result, i, 2);
 
-    zval **ppData;
-
-    if (SUCCESS == zend_hash_find(Z_ARRVAL_P(return_value), ret->val, ret->len, (void **) &ppData))
+    if (SUCCESS == zend_hash_find(Z_ARRVAL_P(return_value), ret->val, ret->len, (void **) &tmp))
     {
-      add_assoc_long_ex(return_value, ret->val, ret->len, Z_LVAL_PP(ppData) + 1);
+      Z_LVAL_PP(tmp)++;
     }
     else
     {
@@ -228,6 +227,7 @@ PHP_SM_API double sm_strike_match (const char *str_a_val, int str_a_len, const c
   }
 
   zval **pp_pairs_short_count;
+  zval **pp_pairs_long_count;
 
   for (zend_hash_internal_pointer_reset_ex(ht_pairs_short, &position);
        SUCCESS == zend_hash_get_current_data_ex(ht_pairs_short, (void**) &pp_pairs_short_count, &position);
@@ -235,7 +235,6 @@ PHP_SM_API double sm_strike_match (const char *str_a_val, int str_a_len, const c
   {
     zend_hash_get_current_key_ex(ht_pairs_short, &key, &key_len, &index, 0, &position);
 
-    zval **pp_pairs_long_count;
     if (SUCCESS == zend_hash_find(ht_pairs_long, key, key_len, (void**) &pp_pairs_long_count))
     {
       intersection += Z_LVAL_PP(pp_pairs_short_count) < Z_LVAL_PP(pp_pairs_long_count)
