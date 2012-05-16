@@ -43,7 +43,7 @@ PHP_SM_API extern double sm_strike_match (const char *str_a_val, int str_a_len, 
 PHP_MINFO_FUNCTION(sm);
 PHP_FUNCTION(strike_match);
 
-#define PHP_SM_VERSION "2.1.1"
+#define PHP_SM_VERSION "2.1.3"
 
 #ifdef ZTS
 #define SM_G(v) TSRMG(sm_globals_id, zend_sm_globals *, v)

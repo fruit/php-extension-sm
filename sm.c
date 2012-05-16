@@ -27,7 +27,6 @@
 
 #if HAVE_MBSTRING
 #include "ext/mbstring/mbstring.h"
-ZEND_EXTERN_MODULE_GLOBALS(mbstring)
 #endif
 
 #define SM_MODULE_VERSION PHP_SM_VERSION
@@ -71,10 +70,9 @@ ZEND_GET_MODULE(sm)
 PHP_MINFO_FUNCTION(sm)
 {
   php_info_print_table_start();
-  php_info_print_table_header(2, "Strike match support", "enabled");
-  php_info_print_table_header(2, "Version", SM_MODULE_VERSION);
-  php_info_print_table_header(2, "Date", "2012/04/03 00:48:51");
-  php_info_print_table_header(2, "Author", "Ilya Sabelnikov <fruit.dev@gmail.com>");
+  php_info_print_table_header(2, "Dice's coefficient algorithm", "enabled");
+  php_info_print_table_row(2, "Version", SM_MODULE_VERSION);
+  php_info_print_table_row(2, "Author", "Ilya Sabelnikov <fruit.dev@gmail.com>");
   php_info_print_table_end();
 }
 /* }}} */
