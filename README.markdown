@@ -1,5 +1,7 @@
 # Installation
 
+[![Build Status](https://travis-ci.org/fruit/php-extension-sm.svg?branch=master)](https://travis-ci.org/fruit/php-extension-sm)
+
 ## Get code from GitHub:
 
     $ git clone git://github.com/fruit/php-extension-sm.git
