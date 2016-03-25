@@ -27,4 +27,8 @@ Than add new line to the `php.ini` and restart Apache/PHP-FPM
 
 # Dependencies
 
-  Version PHP 5.3 or later required
+  Version PHP 5.2, 5.3, 5.4, 5.5, 5.6
+
+# Plans
+
+  Version PHP 7.0 (unlikely)
