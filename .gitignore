@@ -1,3 +1,5 @@
+nbproject/
+.idea/
 .deps
 *.lo
 *.la
@@ -29,6 +31,8 @@ ltmain.sh
 missing
 mkinstalldirs
 modules
-sm.php
 run-tests.php
 autom4te.cache
+CMakeLists.txt
+tests/*
+!tests/*.phpt

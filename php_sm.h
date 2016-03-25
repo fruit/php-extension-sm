@@ -34,16 +34,13 @@ extern zend_module_entry sm_module_entry;
 #  define PHP_SM_API
 #endif
 
-PHP_SM_API extern double sm_strike_match (const char *str_a_val, int str_a_len, const char *str_b_val, int str_b_len);
+PHP_SM_API extern double sm_strike_match (const char *str_a_val, uint str_a_len, const char *str_b_val, uint str_b_len);
 
 #ifdef ZTS
 #include "TSRM.h"
 #endif
 
-PHP_MINFO_FUNCTION(sm);
-PHP_FUNCTION(strike_match);
-
-#define PHP_SM_VERSION "2.1.3"
+#define PHP_SM_VERSION "2.1.4"
 
 #ifdef ZTS
 #define SM_G(v) TSRMG(sm_globals_id, zend_sm_globals *, v)
@@ -52,7 +49,6 @@ PHP_FUNCTION(strike_match);
 #endif
 
 #endif  /* PHP_SM_H */
-
 
 /*
  * Local variables:

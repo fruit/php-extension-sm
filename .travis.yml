@@ -1,0 +1,26 @@
+language: php
+
+sudo: false
+
+php:
+  - 5.2
+  - 5.3
+  - 5.4
+  - 5.5
+  - 5.6
+  
+before_script:
+  - phpenv config-rm xdebug.ini
+  - phpize
+  - ./configure --with-sm
+  - make
+
+script: TEST_PHP_EXECUTABLE=$(which php) php run-tests.php -n
+    -d extension_dir=modules 
+    -d extension=sm.so 
+    --show-diff tests/
+
+notifications:
+  email:
+    - fruit.dev@gmail.com
+
